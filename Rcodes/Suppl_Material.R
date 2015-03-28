@@ -1,6 +1,5 @@
 # Supplementary Materials: Applying Bayesian spatio-temporal models to fisheries bycatch in the Canadian Arctic R codes for the final model, inferences, and predictions
 
-### Please refer to the INLA website: www.r-inla.org for additional information 
 rm(list = ls(all = TRUE))
 
 ##################################
@@ -21,7 +20,6 @@ mpa<-cbind(MPAlong,MPAlat)
 
 library(marmap)
 iso<-read.bathy("Data/etopo1_bedrock.xyz",sep=" ")
-### data from NOAA: http://maps.ngdc.noaa.gov/viewers/wcs-client/
 
 library(maps)
 library(mapdata)
@@ -38,13 +36,16 @@ points(data$longitude,data$latitude,pch=20) # fishing locations
 ### Bayesian spatio-temporal model 
 ##########################
 library(INLA)
-inla.setOption(inla.call='remote') 
+### the next comand line is used if the 
+### inla computations is made on another machine
+### if you use your computer, just comment the next line
+###inla.setOption(inla.call='remote') 
 
 ### create mesh
 mesh <- inla.mesh.2d(cbind(data$X, data$Y), max.edge=c(40, 80), cut=5)
 
 ### define SPDE
-spde <- inla.spde2.matern(mesh)
+spde <- inla.spde2.matern(mesh, alpha=2)
 
 ### Observation matrix $A$ for each year
 table(repl <- data$year-2007)#year index from 1:4
@@ -73,7 +74,7 @@ form <-  gr ~ 0 + b0 + I(duration) + Ngillnets + I(TC.tspp) +
 rl.nb2.gr <- inla(form, family='zeroinflatednbinomial2', 
                  data=inla.stack.data(stke), 
                 control.compute=list(dic=TRUE), 
-                 control.inla=list(strategy='laplace'), 
+                 control.inla=list(strategy='laplace'), #note that we are here using laplace, default in R-INLA is the simplified laplace approximation (run faster)
                  control.predictor=list(A=inla.stack.A(stke)),verbose=TRUE)
 
 ##########################
@@ -225,7 +226,7 @@ jprd <- read.table('Data/jprd.txt',header=T)
 jprd.y <- split(jprd, jprd$year)
 str(jprd.y)
 
-proj <- "+proj=utm +zone=19 +ellps=GRS80 +units=km +no_defs" 
+proj <- "+proj=utm +zone=19 +ellps=GRS80 +units=km +no_defs" # km
 res0 <- lapply(jprd.y, function(x) SpatialPoints(cbind(x$x, x$y), CRS(proj)))
 
 newproj <- "+proj=longlat +zone=19 +ellps=GRS80" # lat/long

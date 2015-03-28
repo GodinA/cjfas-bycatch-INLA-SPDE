@@ -2,17 +2,14 @@
 # Applying Bayesian spatio-temporal models to fisheries bycatch in the Canadian Arctic 
 # R codes for all models tested with final mesh
 
-# Notes: For some model tested, there will be R-INLA warnings, this is normal, some models tested were inappropriate; moreover you are working with a similar but simulated dataset due to Fisheries and Oceans Canada data privacy policy.
-
 rm(list = ls(all = TRUE))
 require(xtable)
 library(INLA)
-### INLA website: www.r-inla.org
+
 ### the next comand line is used if the 
 ### inla computations is made on another machine
 ### if you use your computer, just comment the next line
 ###inla.setOption(inla.call='remote') 
-inla.setOption(num.threads=8) 
 
 #load Greenland shark simulated data
 gr1 <- read.table('fackdata.txt', header=TRUE)
@@ -21,7 +18,7 @@ head(gr1)
 
 # \section{The models}
 # 
-# We need a model that take into account 
+# We need a model that takes into account 
 # the spatial and the temporal domains. 
 # 
 # For spatial domain we consider a Gaussian Field. 
@@ -55,7 +52,7 @@ head(gr1)
 #     months in another years.
 # \end{enumerate}
 
-# Testing different families 
+# Testing different likelihoods
 fams <- c(paste(c('', rep('zeroinflated', 3)), 
                 'poisson', c('', 0:2), sep=''), 
           paste(c('', rep('zeroinflated', 3)), 
@@ -68,7 +65,7 @@ names(gr1)
 covars <- gr1[,c(4:7)]
 head(covars)
 
-#Formulae
+#Formula
 form0 <-  y ~ 0 + b0 + I(duration) + Ngillnets + I(TC.tspp) + 
     f(inla.group(bathymetry), model='rw1') #inla.group reduce the number to unique values
 
@@ -105,7 +102,7 @@ ind.1 <- inla.spde.make.index('s', mesh.a$n)
 stk.1 <- inla.stack(data=list(y=gr1$y), A=list(A.1,1),
                     effects=list(ind.1, list(data.frame(b0=1,covars))))
 
-# STEP 4: Formulae
+# STEP 4: Formula
 form1 <-  y ~ 0 + b0 + I(duration) + Ngillnets + I(TC.tspp) + f(inla.group(bathymetry), model='rw1')  +  f(s, model=spde.a)
 
 # STEP 5: FIT THE MODEL; HERE FIT TO SEVERAL FAMILIES 
@@ -128,7 +125,7 @@ ind.2 <- inla.spde.make.index(name='s', n.spde=mesh.a$n, n.repl=4)
 stk.2 <- inla.stack(data=list(y=gr1$y), A=list(A.2,1),
                      effects=list(ind.2, list(data.frame(b0=1,covars))))
 
-# formulae
+# formula
 form.2 <-  y ~ 0 + b0 + I(duration) + Ngillnets + I(TC.tspp) + f(inla.group(bathymetry), model='rw1')  +  f(s, model=spde.a, replicate=s.repl)
 
 # fit the models to all families
@@ -151,14 +148,14 @@ ind.3 <- inla.spde.make.index(name='s', n.spde=mesh.a$n, n.group=4)
 stk.3 <- inla.stack(data=list(y=gr1$y), A=list(A.3,1),
                      effects=list(ind.3, list(data.frame(b0=1,covars))))
 
-# formula 
+# formula
 # autoregressive correlatin ($m3a$) 
 form.3a <- y ~ 0 + b0 + I(duration) + Ngillnets + I(TC.tspp) + f(inla.group(bathymetry), model='rw1')  + f(s, model=spde.a, group=s.group, control.group=list(model='ar1'))
 
 # exchangeable ($m3b$)
 form.3b <- y ~ 0 + b0 + I(duration) + Ngillnets + I(TC.tspp) + f(inla.group(bathymetry), model='rw1') + f(s, model=spde.a, group=s.group, control.group=list(model='exchangeable'))
 
-# fit models with all families
+# fit models with all likelihoods
 # m3a
 dics.3a <- sapply(fams, function(fam) {
     cat(fam, '\n') ### just to see the progress...
