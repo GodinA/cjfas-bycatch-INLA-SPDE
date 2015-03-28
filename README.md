@@ -7,6 +7,7 @@ This directory contains two folders `Data` and `Rcodes`.
   * `gridpred.txt` -  Grid (4 x 4 km) used in prediction
   *  `fackdata.txt` - Greenland shark bycatch data (counts) 
   *  `etopo1_bedrock.xyz` - NOAA ETOPO1 Bathymetry of Baffin Bay from https://www.ngdc.noaa.gov/mgg/global/global.html
+  *  `EEZ` - Folder containing the shapefile for the Canadian Northwest Atlantic Exclusive Economic Zone (EEZ)
 * `Rcodes`
   * `AllmodelsDICs.R` - R codes to run all spatiotemporal model tested (See Table 2 and 3 in paper)
   * `Suppl_Material.R` - R codes to fit the best model, predict bycatch hotspots, and create most figures included in the paper.
